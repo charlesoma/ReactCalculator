@@ -9,14 +9,27 @@ const inputButtons = [
     [1, 2, 3, '/'],
     [4, 5, 6, '*'],
     [7, 8, 9, '-'],
-    [0, '.', '=', '+']
+    [0, '.', '=', '+'],
+    ['c', 'ce']
 ];
 
 export default class App extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			previousInputValue: 0,
+			inputValue: 0,
+			selectedSymbol: null
+		}
+	}
+
   render() {
     return (
       <View style={Style.rootContainer}>
-        <View style={Style.displayContainer}></View>
+        <View style={Style.displayContainer}>
+            <Text style={Style.displayText}>{this.state.inputValue}</Text>
+        </View>
         <View style={Style.inputContainer}>
             {this._renderInputButtons()}
         </View>
@@ -33,6 +46,7 @@ export default class App extends React.Component {
 			    let input = row[i];
 			    inputRow.push(
                     <InputButton value={input} 
+                                 highlight={this._onInputButtonPressed.bind(this, input)}
                                  onPress={this._onInputButtonPressed.bind(this, input)} 
                                  key={r + '-' + i} />
 			    );
@@ -42,6 +56,53 @@ export default class App extends React.Component {
 	    return views;
     }
     _onInputButtonPressed(input) {
-		    	alert(input)
-		    }
+    	switch (typeof input) {
+    		case 'number':
+    		    return this._handleNumberInput(input)
+    		case 'string':
+    		    return this._handleStringInput(input)
+    	}
+    }
+    _handleNumberInput(num) {
+    	let inputValue = (this.state.inputValue * 10) + num;
+
+    	this.setState({
+    		inputValue: inputValue
+    	})
+    }
+    _handleStringInput(str) {
+    	switch (str) {
+    		case '/':
+    		case '*':
+            case '+':
+            case '-':
+                this.setState({
+                	selectedSymbol: str,
+                	previousInputValue: this.state.inputValue,
+                	inputValue: 0
+                });
+                break;
+
+            case '=':
+                let symbol = this.state.selectedSymbol,
+                inputValue = this.state.inputValue,
+                previousInputValue = this.state.previousInputValue;
+
+                if(!symbol) {
+                	return;
+                }
+
+                this.setState({
+                	previousInputValue: 0,
+                	inputValue: eval(previousInputValue + symbol + inputValue),
+                	selectedSymbol: null
+                });
+                break;
+                
+            case 'c':
+            case 'ce':
+                this.setState({inputValue: 0});
+                break;
+    	}
+    }
 }
